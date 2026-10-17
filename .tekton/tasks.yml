@@ -52,7 +52,8 @@ spec:
     - name: source
   steps:
     - name: clone
-      image: alpine/git:2.47.2
+      # The lab mirror does not contain the previously used 2.47.2 tag.
+      image: alpine/git:latest
       workingDir: $(workspaces.source.path)
       env:
         - name: REPO_URL
