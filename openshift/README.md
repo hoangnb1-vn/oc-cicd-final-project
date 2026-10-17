@@ -44,9 +44,11 @@ it for question 6. Creating this Pipeline does not start a PipelineRun.
 
 Before running the full pipeline, confirm that the `pipeline` service account
 can deploy workloads/routes, push to the project image registry, and run the
-privileged Buildah step under the lab's security policies. The default image
+Buildah step as UID 0 with SETFCAP under the lab's existing pipelines-scc.
+Buildah uses VFS storage and chroot isolation without privileged containers.
+The default image
 target uses namespace `sn-labs-hoangnb1`; adjust the `image` parameter if your
-assigned namespace changes. If the lab disallows privileged Buildah, use its
+assigned namespace changes. If the lab disallows this Buildah configuration, use its
 provided supported build task rather than changing cluster security policies.
 
 ## Evidence capture

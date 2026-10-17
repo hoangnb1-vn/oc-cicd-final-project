@@ -106,17 +106,22 @@ spec:
       image: quay.io/buildah/stable:v1.39
       workingDir: $(workspaces.source.path)
       securityContext:
-        privileged: true
+        runAsUser: 0
+        capabilities:
+          add:
+            - SETFCAP
       volumeMounts:
         - name: containers
           mountPath: /var/lib/containers
       env:
         - name: IMAGE
           value: $(params.IMAGE)
+        - name: BUILDAH_ISOLATION
+          value: chroot
       script: |
         #!/bin/sh
         set -eu
-        buildah --storage-driver=vfs bud --format=oci -f Dockerfile -t "$IMAGE" .
+        buildah --storage-driver=vfs bud --isolation=chroot --format=oci -f Dockerfile -t "$IMAGE" .
         buildah --storage-driver=vfs push "$IMAGE" "docker://$IMAGE"
 
 ---
