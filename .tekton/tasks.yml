@@ -106,6 +106,7 @@ spec:
       image: quay.io/buildah/stable:v1.39
       workingDir: $(workspaces.source.path)
       securityContext:
+        privileged: false
         runAsUser: 0
         capabilities:
           add:
@@ -146,4 +147,16 @@ spec:
         oc rollout restart deployment/oc-final
         oc rollout status deployment/oc-final --timeout=180s
         oc expose deployment oc-final --port=8080 --dry-run=client -o yaml | oc apply -f -
-        oc expose service oc-final --dry-run=client -o yaml | oc apply -f -
+        # Specify the Route API explicitly; some oc clients emit core/v1 here.
+        oc apply -f - <<'EOF'
+        apiVersion: route.openshift.io/v1
+        kind: Route
+        metadata:
+          name: oc-final
+        spec:
+          to:
+            kind: Service
+            name: oc-final
+          port:
+            targetPort: 8080
+        EOF
