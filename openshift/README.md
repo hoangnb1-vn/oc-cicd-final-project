@@ -53,6 +53,22 @@ provided supported build task rather than changing cluster security policies.
 
 ## Evidence capture
 
+### Question 8: actual application logs (2 points)
+
+The application listens on port `8000` and writes a startup banner containing
+`SERVICERUNNING`. Apply the latest Tasks and run the pipeline against the latest
+GitHub `main` commit to rebuild and deploy the updated application first.
+After the PipelineRun succeeds, capture the application container logs:
+
+```bash
+oc logs -n sn-labs-hoangnb1 deployment/oc-final --all-containers=true --timestamps=true > oc-pipeline-application-logs
+cat oc-pipeline-application-logs
+```
+
+Verify that the actual output includes `SERVICERUNNING` and port `8000`, then
+copy the entire file contents into the text answer for question 8. Do not
+substitute PipelineRun build logs or manually written sample logs.
+
 ### Question 7: successful PipelineRun (2 points)
 
 1. Push the updated repository, including `Dockerfile`, to GitHub branch `main`.

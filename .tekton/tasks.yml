@@ -146,7 +146,7 @@ spec:
         oc create deployment oc-final --image="$IMAGE" --dry-run=client -o yaml | oc apply -f -
         oc rollout restart deployment/oc-final
         oc rollout status deployment/oc-final --timeout=180s
-        oc expose deployment oc-final --port=8080 --dry-run=client -o yaml | oc apply -f -
+        oc expose deployment oc-final --port=8000 --target-port=8000 --dry-run=client -o yaml | oc apply -f -
         # Specify the Route API explicitly; some oc clients emit core/v1 here.
         oc apply -f - <<'EOF'
         apiVersion: route.openshift.io/v1
@@ -158,5 +158,5 @@ spec:
             kind: Service
             name: oc-final
           port:
-            targetPort: 8080
+            targetPort: 8000
         EOF

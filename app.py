@@ -18,4 +18,7 @@ def health():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
+    print("Starting OC CI/CD application", flush=True)
+    print("========== SERVICERUNNING ==========", flush=True)
+    print("Listening on port 8000", flush=True)
+    app.run(host="0.0.0.0", port=8000)

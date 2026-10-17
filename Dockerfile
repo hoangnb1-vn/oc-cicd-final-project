@@ -3,6 +3,6 @@ WORKDIR /app
 COPY requirements.txt .
 RUN python -m pip install --no-cache-dir -r requirements.txt
 COPY app.py .
-EXPOSE 8080
+EXPOSE 8000
 USER 1001
 CMD ["python", "app.py"]
