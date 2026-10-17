@@ -15,11 +15,11 @@ A minimal Flask API:
 The workflow is `.github/workflows/workflow.yml`. It runs on pushes and pull requests to `main`, checks out the code, configures Python, installs dependencies, runs **Lint with flake8**, and **Run unit tests with nose**.
 
 ## Tekton / OpenShift
-- `.tekton/tasks.yml` defines `cleanup` and `nose` tasks.
+- `.tekton/tasks.yml` defines `cleanup`, `git-clone`, `flake8`, `nose`, `buildah`, and `deploy` tasks.
 - `.tekton/pipeline.yml` connects the tasks.
 - `.tekton/pvc.yml` is a sample PersistentVolumeClaim manifest for pipeline workspace storage.
 
-Apply these manifests only in an OpenShift project/namespace where you have permission. Storage class and cluster policies vary; update the PVC's `storageClassName` if required.
+The PVC requests `1Gi` using the `skills-network-learner` storage class, as required by question 5. Apply these manifests in your assigned Skills Network OpenShift project.
 
 ## Run locally
 ```bash

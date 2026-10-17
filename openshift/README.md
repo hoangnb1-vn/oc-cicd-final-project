@@ -23,9 +23,70 @@ These commands assume `oc` is installed and you are logged into the correct clus
    oc get pipeline oc-pipelines-oc-final
    ```
 
-A PipelineRun also needs a workspace binding and a source checkout step or a pre-populated workspace. The included Pipeline expects source code to already exist in the bound workspace. Your course environment may provide a preconfigured pipeline or task for cloning the Git repository. Follow the course's OpenShift instructions for binding the repository and workspace before starting a run.
+The pipeline clones the repository itself. When starting a PipelineRun, bind
+`shared-workspace` to PVC `oc-pipelines-console-pvc`. Push the project changes
+to the configured Git repository before running: the checkout must contain
+the Dockerfile, requirements, application, and tests.
+
+### Question 6: pipeline diagram (2 points)
+
+Apply `.tekton/tasks.yml` first, then `.tekton/pipeline.yml`, or import their
+YAML documents through the OpenShift console's **Import YAML** form.
+All six Tasks are supplied locally; no ClusterTasks are referenced.
+
+Open **Pipelines > Pipelines > oc-pipelines-oc-final > Details** and capture
+the diagram with every task visible:
+
+`cleanup -> git-clone -> flake8 -> nose -> buildah -> deploy`
+
+Save the actual console screenshot as `oc-pipelines-oc-final.png` and upload
+it for question 6. Creating this Pipeline does not start a PipelineRun.
+
+Before running the full pipeline, confirm that the `pipeline` service account
+can deploy workloads/routes, push to the project image registry, and run the
+privileged Buildah step under the lab's security policies. The default image
+target uses namespace `sn-labs-hoangnb1`; adjust the `image` parameter if your
+assigned namespace changes. If the lab disallows privileged Buildah, use its
+provided supported build task rather than changing cluster security policies.
 
 ## Evidence capture
+
+### Question 7: successful PipelineRun (2 points)
+
+1. Push the updated repository, including `Dockerfile`, to GitHub branch `main`.
+2. Apply the latest Tasks and Pipeline in the assigned project.
+3. Import `.tekton/pipelinerun.yml` through **Import YAML > Create**, or run
+   `oc create -f .tekton/pipelinerun.yml`. Use **create**, not **apply**, because
+   this manifest uses `generateName` to allow retries without deleting runs.
+4. Open **Pipelines > PipelineRuns**, select the newly generated
+   `oc-pipelines-oc-green-...` run, and monitor its details and logs.
+5. Only capture submission evidence when the run is **Succeeded** and all six
+   tasks are green. Save the screenshot as `oc-pipelines-oc-green.png`.
+
+The question specifies the screenshot filename, not a fixed PipelineRun name.
+If a task fails, inspect its Logs and Events before retrying with a new run.
+This repository does not contain evidence of a successful cluster execution.
+
+### Question 5: PVC details (2 points)
+
+The manifest `.tekton/pvc.yml` requests `1Gi` with storage class
+`skills-network-learner`.
+
+In the assigned Skills Network OpenShift project:
+
+1. Apply `.tekton/pvc.yml` using the command above, or paste its contents
+   into the OpenShift console's **Import YAML** form and create the resource.
+2. Open **Storage > PersistentVolumeClaims > oc-pipelines-console-pvc > Details**.
+3. Verify that the details show storage class `skills-network-learner` and
+   requested capacity `1Gi` (the console may format this as `1 GiB`).
+4. Capture the real details page with both fields visible. Save the screenshot
+   as `oc-pipelines-console-pvc-details.png` and upload it for question 5.
+
+If a claim with this name already exists with another storage class, do not
+delete it blindly: storage class cannot normally be changed on an existing
+claim. Create a separate correctly configured claim with a different name,
+or follow the lab's reset instructions if that exact name is required.
+
 - PVC: OpenShift Developer/Administrator console → Storage → PersistentVolumeClaims → `oc-pipelines-console-pvc` → Details.
 - Pipeline: Pipelines → Pipelines → `oc-pipelines-oc-final`.
 - Successful run: Pipelines → PipelineRuns → open the successful run and capture task status. If your course requires the run name `oc-pipelines-oc-green`, create/name it accordingly in the console if supported.

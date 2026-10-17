@@ -3,10 +3,9 @@ kind: PersistentVolumeClaim
 metadata:
   name: oc-pipelines-console-pvc
 spec:
+  storageClassName: skills-network-learner
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 1Gi
-  # If your OpenShift cluster requires a named storage class, uncomment and set it:
-  # storageClassName: YOUR_STORAGE_CLASS

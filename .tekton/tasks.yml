@@ -26,14 +26,118 @@ spec:
   workspaces:
     - name: source
   steps:
-    - name: lint-and-test
-      image: python:3.10-slim
+    - name: unit-tests
+      image: python:3.9-slim
       workingDir: $(workspaces.source.path)
       script: |
         #!/bin/sh
         set -eu
         python -m pip install --no-cache-dir -r requirements.txt
-        echo "Lint with flake8"
-        python -m flake8 app.py tests
         echo "Run unit tests with nose"
         python -m nose -v
+
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: git-clone
+spec:
+  params:
+    - name: url
+      type: string
+    - name: revision
+      type: string
+      default: main
+  workspaces:
+    - name: source
+  steps:
+    - name: clone
+      image: alpine/git:2.47.2
+      workingDir: $(workspaces.source.path)
+      env:
+        - name: REPO_URL
+          value: $(params.url)
+        - name: REVISION
+          value: $(params.revision)
+      script: |
+        #!/bin/sh
+        set -eu
+        # Only clear this task's disposable checkout directory.
+        rm -rf checkout
+        git clone --depth 1 --branch "$REVISION" -- "$REPO_URL" checkout
+        cp -R checkout/. .
+        rm -rf checkout
+
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: flake8
+spec:
+  workspaces:
+    - name: source
+  steps:
+    - name: lint
+      image: python:3.9-slim
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/sh
+        set -eu
+        python -m pip install --no-cache-dir -r requirements.txt
+        python -m flake8 app.py tests
+
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: buildah
+spec:
+  params:
+    - name: IMAGE
+      type: string
+  workspaces:
+    - name: source
+  volumes:
+    - name: containers
+      emptyDir: {}
+  steps:
+    - name: build-and-push
+      image: quay.io/buildah/stable:v1.39
+      workingDir: $(workspaces.source.path)
+      securityContext:
+        privileged: true
+      volumeMounts:
+        - name: containers
+          mountPath: /var/lib/containers
+      env:
+        - name: IMAGE
+          value: $(params.IMAGE)
+      script: |
+        #!/bin/sh
+        set -eu
+        buildah --storage-driver=vfs bud --format=oci -f Dockerfile -t "$IMAGE" .
+        buildah --storage-driver=vfs push "$IMAGE" "docker://$IMAGE"
+
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: deploy
+spec:
+  params:
+    - name: IMAGE
+      type: string
+  steps:
+    - name: openshift-client
+      image: quay.io/openshift/origin-cli:4.16
+      env:
+        - name: IMAGE
+          value: $(params.IMAGE)
+      script: |
+        #!/bin/sh
+        set -eu
+        oc create deployment oc-final --image="$IMAGE" --dry-run=client -o yaml | oc apply -f -
+        oc rollout restart deployment/oc-final
+        oc rollout status deployment/oc-final --timeout=180s
+        oc expose deployment oc-final --port=8080 --dry-run=client -o yaml | oc apply -f -
+        oc expose service oc-final --dry-run=client -o yaml | oc apply -f -

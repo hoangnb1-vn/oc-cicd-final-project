@@ -1,0 +1,22 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: oc-pipelines-oc-green-
+spec:
+  pipelineRef:
+    name: oc-pipelines-oc-final
+  taskRunTemplate:
+    serviceAccountName: pipeline
+  params:
+    - name: repo-url
+      value: https://github.com/hoangnb1-vn/oc-cicd-final-project.git
+    - name: revision
+      value: main
+    - name: image
+      value: image-registry.openshift-image-registry.svc:5000/sn-labs-hoangnb1/oc-final:latest
+  workspaces:
+    - name: shared-workspace
+      persistentVolumeClaim:
+        claimName: oc-pipelines-console-pvc
+  timeouts:
+    pipeline: 30m0s
