@@ -1,6 +1,7 @@
 import unittest
 from app import app
 
+
 class AppTests(unittest.TestCase):
     def setUp(self):
         app.config["TESTING"] = True
@@ -15,6 +16,7 @@ class AppTests(unittest.TestCase):
         response = self.client.get("/health")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()["status"], "ok")
+
 
 if __name__ == "__main__":
     unittest.main()
